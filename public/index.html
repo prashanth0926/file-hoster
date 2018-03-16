@@ -58,8 +58,8 @@
 
 <script>
     var xhttp = new XMLHttpRequest();
-    var ws = new WebSocket("ws://file-hoster.herokuapp.com:3000/upload");
-    var wsn = new WebSocket("ws://file-hoster.herokuapp.com:3000/name");
+    var ws = new WebSocket("wss://file-hoster.herokuapp.com/upload");
+    var wsn = new WebSocket("wss://file-hoster.herokuapp.com/name");
     var images = document.getElementById('images');
     var uploadFileInp = document.getElementById('files');
     var submitBtn = document.getElementById('submitBtn');
