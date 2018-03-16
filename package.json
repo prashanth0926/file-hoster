@@ -1,0 +1,21 @@
+{
+  "name": "file-upload",
+  "version": "1.0.0",
+  "description": "uploading files to a server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "file",
+    "upload"
+  ],
+  "author": "Prashanth Molakala",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-ws": "^3.0.0",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  }
+}

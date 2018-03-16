@@ -1,0 +1,157 @@
+<style>
+    #images {
+        margin-bottom: 100px;
+    }
+    #images img {
+        margin: 20px;
+        margin-bottom: 0px;
+    }
+    #submitBtn {
+        margin-top: 10px;
+        margin-left: 25px;
+        margin-bottom: 20px; 
+        padding: 10px;
+        border-radius: 5px;
+        background-color: sandybrown;
+        color: white;
+    }
+    #progress {
+        background-color: green;
+    }
+    #message {
+        margin-bottom: 100px;
+        margin-left: 45%;  
+    }
+    h1 {
+        margin-top: 25px;
+        margin-left: 25px;
+    }
+    .img-text {
+        text-align: center;
+    }
+
+    .file-box {
+        display: inline-block;
+    }
+
+    .delete-icon {
+        margin-left: 25px;
+        background-color: red;
+        color: white;
+    }
+    .file-name {
+        display: inline-block;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        max-width: 120px;
+    }
+</style>
+
+<title>MP</title>
+<link href="https://www.4checks.com/4checks_assets/images/service/MP.gif" rel="icon" type="image/png">
+<h1>File Hosting</h1>
+<button id="submitBtn" onclick="chooseFiles()">Upload Files</button>
+<progress id="progress" value="0" max="100"></progress>
+<div id="images"></div>
+<input hidden id="files" type="file" multiple />
+
+<script>
+    var xhttp = new XMLHttpRequest();
+    var ws = new WebSocket("ws://localhost:3000/upload");
+    var wsn = new WebSocket("ws://localhost:3000/name");
+    var images = document.getElementById('images');
+    var uploadFileInp = document.getElementById('files');
+    var submitBtn = document.getElementById('submitBtn');
+    var progressBar = document.getElementById('progress');
+
+    progressBar.style.display = 'none';
+    getFiles();
+
+    uploadFileInp.addEventListener('change', function() {
+        if(uploadFileInp.files.length) {
+            uploadFiles(uploadFileInp.files);
+        }
+    });
+
+    function getFiles() {
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && (this.status == 200 || this.status == 304)) {
+                var res = JSON.parse(this.response);
+                appendImages(res);
+            }
+        };
+        xhttp.open("GET", "/api/files", true);
+        xhttp.send();
+    }
+
+    function deleteFile(fileName) {
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && (this.status == 200 || this.status == 304)) {
+                var delImg = document.getElementById(fileName.split('.')[0]);
+                delImg.parentNode.removeChild(delImg);
+            }
+        };
+        xhttp.open("DELETE", "/api/files?fileName="+fileName, true);
+        xhttp.send();
+    }
+
+    function appendImages(imgs) {
+        var imageUrl = '/files/'
+        for(let i in imgs) {
+            var box = document.createElement('DIV');
+            box.setAttribute('id', imgs[i].split('.')[0]);
+            box.setAttribute('class', 'file-box');
+            var del = document.createElement('BUTTON');
+            del.setAttribute('class', 'delete-icon');
+            del.addEventListener('click', function() { deleteFile(imgs[i]) });
+            del.appendChild(document.createTextNode('DELETE'));
+            var a = document.createElement('A');
+            a.setAttribute('href', imageUrl + imgs[i]);
+            var d = document.createElement('DIV');
+            d.setAttribute('class', 'img-text');
+            var spn = document.createElement('SPAN');
+            spn.setAttribute('class', 'file-name');
+            spn.appendChild(document.createTextNode(imgs[i]));
+            d.appendChild(spn);
+            var image = document.createElement('IMG');
+            if(['jpg', 'jpeg', 'png', 'gif'].includes(imgs[i].split('.')[1].toLowerCase())) {
+                image.setAttribute('src', imageUrl + imgs[i]);
+            } else {
+                image.setAttribute('src', 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Download_Files_4_You_Logo.png');
+            }
+            image.setAttribute('width', 250);
+            image.setAttribute('height', 250);
+            a.appendChild(image);
+            box.appendChild(a);
+            d.appendChild(del);
+            box.appendChild(d);
+            images.appendChild(box);
+        }
+    }
+
+    function chooseFiles() {
+        document.getElementById('files').click()
+    }
+
+    function uploadFiles(files) {
+        let cnt = 0;
+        progressBar.style.display = 'inline-block';
+        for (let i=0; i<files.length; i++) {
+            wsn.send(files[i].name);
+            ws.send(files[i]);
+        }
+        submitBtn.disabled = true;
+        if ("WebSocket" in window) {
+            ws.onmessage = function (evt) {
+                cnt++;
+                appendImages([evt.data]);
+                progressBar.value = Math.round((cnt/files.length)*100);
+                if(cnt === files.length) {
+                    submitBtn.disabled = false;
+                    progressBar.style.display = 'none';
+                }
+            };
+        }
+    }
+</script>
